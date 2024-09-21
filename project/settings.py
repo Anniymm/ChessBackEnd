@@ -124,3 +124,9 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #dro unda shevcvalo
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30)
 }
+
+import os
+# es saewhvoa, ro rame amas mivxedo(testing)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
