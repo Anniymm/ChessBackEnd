@@ -142,8 +142,13 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
 SPECTACULAR_SETTINGS = { # aq shesasworebeli maqvs da asaghweri
-    'TITLE': '{my API name}',
-    'DESCRIPTION': 'API documentation for my project.(Must be added)',
+    'TITLE': 'ChessClock Time managment',
+    'DESCRIPTION': '''This project implements a time management system
+    based on chess clock identification, ensuring precise control over allocated time for tasks 
+    or activities. It uses JWT (JSON Web Tokens) for secure user authentication and authorization, ensuring
+    that only authenticated users can interact with the time management functionality. The system is designed to
+    track and manage time efficiently by leveraging the mechanics of a chess clock, switching between active users 
+    or tasks and maintaining a fair and accountable time usage system.''',
     'VERSION': '1.0.0',
     # damateba, maxasiateblebis shesabamisad
 }
