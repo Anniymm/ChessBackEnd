@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'users',
     'rest_framework_simplejwt',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -117,6 +118,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',   # api-documentaion
 }
 
 from datetime import timedelta
@@ -138,3 +140,10 @@ EMAIL_HOST_USER = 'chssclock@gmail.com'
 EMAIL_HOST_PASSWORD = 'vbxplqttljwwuqhd'  #satesto gmail, shecvla nebismier dros sheidzleba aqedanve
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
+
+SPECTACULAR_SETTINGS = { # aq shesasworebeli maqvs da asaghweri
+    'TITLE': '{my API name}',
+    'DESCRIPTION': 'API documentation for my project.(Must be added)',
+    'VERSION': '1.0.0',
+    # damateba, maxasiateblebis shesabamisad
+}
