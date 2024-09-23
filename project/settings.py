@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'users',
     'rest_framework_simplejwt',
     'drf_spectacular',
+    'invitations',
 ]
 
 MIDDLEWARE = [
