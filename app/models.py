@@ -21,8 +21,8 @@ class User(AbstractUser):
 class Project(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    start_date = models.DateTimeField() # deadline
+    end_date = models.DateTimeField() # deadline
     # customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_projects')
     # contractor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contractor_projects')
 
@@ -31,11 +31,11 @@ class Project(models.Model):
 
 class Task(models.Model):  # proeqtshi arsebuli konkretuli davaleba
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
-    task_name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
     description = models.TextField()
-    # start_date = models.DateTimeField(timezone.now())
+    # start_date = models.DateTimeField()
     # end_date = models.DateTimeField()
-    status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('in_progress', 'In Progress'), ('completed', 'Completed')])
+    # status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('in_progress', 'In Progress'), ('completed', 'Completed')])
 
     def __str__(self):
         return self.name
