@@ -77,10 +77,13 @@ def accept_invitation(request):
 def register_user(request):   #es ufro login ambavia mgoni, kargad gaviazro da aaar gamomrches 
     email = request.data.get('email')
     password = request.data.get('password')
+    # confirm_password = request.data.get('confirm_password')
 
     if not email or not password:
         return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
 
+    # if password != confirm_password:
+    #     return Response({'error': 'Passwords do not match.'}, status=status.HTTP_400_BAD_REQUEST)
     try:
         invitations = Invitation.objects.filter(invitee_email=email, accepted=True)
 
