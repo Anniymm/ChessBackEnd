@@ -14,7 +14,7 @@ class TaskView(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
 class TaskStatusView(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
+    queryset = TaskStatus.objects.all()
     serializer_class = TaskSerializer
 
 class TimerView(viewsets.ModelViewSet):
