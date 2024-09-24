@@ -37,7 +37,7 @@ def send_invitation(request):
     message = (
         f"{inviter.username} has invited you to join their personal space on {current_site.domain}.\n\n"
         f"Use this link to accept the invitation:\n"
-        f"http://{current_site.domain}/accept-invitation/?token={token}\n\n"
+        f"http://{current_site.domain}/invite/accept-invitation/?token={token}\n\n"
     )
 
     # Email 
