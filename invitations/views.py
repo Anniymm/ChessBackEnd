@@ -74,16 +74,14 @@ def accept_invitation(request):
 
 
 @api_view(['POST'])
-def register_user(request):   #es ufro login ambavia mgoni, kargad gaviazro da aaar gamomrches 
+def register_user(request):
     email = request.data.get('email')
     password = request.data.get('password')
-    # confirm_password = request.data.get('confirm_password')
+    confirm_password = request.data.get('confirm_password')
 
-    if not email or not password:
-        return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+    if not email or not password or not confirm_password:
+        return Response({'error': 'Email, password, and confirm password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # if password != confirm_password:
-    #     return Response({'error': 'Passwords do not match.'}, status=status.HTTP_400_BAD_REQUEST)
     try:
         invitations = Invitation.objects.filter(invitee_email=email, accepted=True)
 
@@ -98,37 +96,40 @@ def register_user(request):   #es ufro login ambavia mgoni, kargad gaviazro da a
     except Invitation.MultipleObjectsReturned:
         return Response({'error': 'Multiple invitations found for this email'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # shevamowmo tu emailit ukve arsebobs user 
+    # tu gmail ukve arsebobs
     try:
         user = get_user_model().objects.get(email=email)
-        # tu arsebobs daabrunos es 
         return Response({'error': 'User with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
     except get_user_model().DoesNotExist:
         pass
 
+    # serializeristvis
     user_data = {
         'email': email,
         'password': password,
+        'confirm_password': confirm_password,
         'first_name': inviter.first_name,
         'last_name': inviter.last_name,
-        'username': email  # username-s vayeneb gmail-ad 
+        'username': email  # gmail rogorc username, amis shecvla shemidzlia rorame
     }
 
     serializer = UserSerializer(data=user_data)
     if serializer.is_valid():
         user = serializer.save()
 
-        # shevamowmo tu personalspace arsebobs
+        # personal spacestvis
         personal_space, created = PersonalSpace.objects.get_or_create(user=user)
 
-        # mowvevis washla
-        invitation.delete()
-        # es authentificatad rom chaitvalos(bazashic inaxavs rogorc daregistrirebul user-s)
+        # mowvevis washla dadasturebis mere magram jobia jer ar wavshalo 
+        # invitation.delete()
+
+        # authetifikacia
         refresh = RefreshToken.for_user(user)
         token_data = {
-            'refresh': str(refresh),
+            'refresh': str(refresh), #stringi ar gamomrches 
             'access': str(refresh.access_token),
         }
+
         return Response({'user': serializer.data, 'token': token_data}, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
