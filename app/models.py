@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from rest_framework import settings 
+from django.core.mail import EmailMessage
 
 class User(AbstractUser): 
     groups = models.ManyToManyField(
@@ -23,11 +25,39 @@ class Project(models.Model):
     description = models.TextField()
     start_date = models.DateTimeField() # deadline
     end_date = models.DateTimeField() # deadline
-    # customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_projects')
-    # contractor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contractor_projects')
+    question = models.CharField(max_length=300, blank=True, null=True)
+    question_file = models.FileField(upload_to='uploads/', blank=True, null=True)
+    customer = models.ManyToManyField(User, related_name='customer_projects')
+    contractor = models.ManyToManyField(User, related_name='contractor_projects')
+    def save(self, *args, **kwargs):
+        is_new_question = not self.pk or self.question or self.question_file
+        super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.name
+        if is_new_question:
+            #aqedan yvelas gmail rom mivighot
+            participants = list(self.customers.values_list('email', flat=True)) + \
+                           list(self.contractors.values_list('email', flat=True))
+
+            subject = f'New Question Added in Project: {self.name}'
+            message = f'A new question has been added to the project "{self.name}".'
+
+            if self.question:
+                message += f'\nQuestion: {self.question}'
+
+            email = EmailMessage(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                participants,
+            )
+
+            # tu file atvirtulia miabas 
+            if self.question_file:
+                email.attach_file(self.question_file.path)
+
+            email.send()
+    # def __str__(self):
+    #     return self.name
 
 class Task(models.Model):  # proeqtshi arsebuli konkretuli davaleba
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
