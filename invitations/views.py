@@ -88,6 +88,7 @@ def register_user(request):
         if invitations.exists():
             invitation = invitations.latest('created_at')
             inviter = invitation.inviter
+            # invitee = invitation.invitee_email
         else:
             return Response({'error': 'No valid invitation found for this email'}, status=status.HTTP_400_BAD_REQUEST)
 
