@@ -88,7 +88,6 @@ def register_user(request):
         if invitations.exists():
             invitation = invitations.latest('created_at')
             inviter = invitation.inviter
-            # invitee = invitation.invitee_email
         else:
             return Response({'error': 'No valid invitation found for this email'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -109,8 +108,8 @@ def register_user(request):
         'email': email,
         'password': password,
         'confirm_password': confirm_password,
-        'first_name': inviter.first_name,
-        'last_name': inviter.last_name,
+        'first_name': invitation.first_name,
+        'last_name': invitation.first_name,
         'username': email  # gmail rogorc username, amis shecvla shemidzlia rorame
     }
 
