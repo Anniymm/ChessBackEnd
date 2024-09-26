@@ -3,22 +3,11 @@ from django.db import models
 from django.utils import timezone
 from rest_framework import settings 
 from django.core.mail import EmailMessage
-
-class User(AbstractUser): 
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='custom_user_set',
-        blank=True,
-        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-        related_query_name='user',
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='custom_user_set',
-        blank=True,
-        help_text='Specific permissions for this user.',
-        related_query_name='user',
-    )
+from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+User = get_user_model() 
 
 class Project(models.Model):
     name = models.CharField(max_length=200)
@@ -27,37 +16,43 @@ class Project(models.Model):
     end_date = models.DateTimeField() # deadline
     question = models.CharField(max_length=300, blank=True, null=True)
     question_file = models.FileField(upload_to='uploads/', blank=True, null=True)
-    customer = models.ManyToManyField(User, related_name='customer_projects')
-    contractor = models.ManyToManyField(User, related_name='contractor_projects')
+    customers = models.ManyToManyField(User, related_name='customer_projects')
+    contractors = models.ManyToManyField(User,related_name='contractor_projects')
+
     def save(self, *args, **kwargs):
-        is_new_question = not self.pk or self.question or self.question_file
         super().save(*args, **kwargs)
 
-        if is_new_question:
-            #aqedan yvelas gmail rom mivighot
-            participants = list(self.customers.values_list('email', flat=True)) + \
-                           list(self.contractors.values_list('email', flat=True))
+@receiver(post_save, sender=Project)
+def send_project_question_email(sender, instance, **kwargs):
+    is_new_question = instance.question or instance.question_file
+    if is_new_question:
+        # email adresebis aghdegena 
+        customer_emails = list(instance.customers.values_list('email', flat=True))
+        contractor_emails = list(instance.contractors.values_list('email', flat=True))
 
-            subject = f'New Question Added in Project: {self.name}'
-            message = f'A new question has been added to the project "{self.name}".'
+        participants = customer_emails + contractor_emails
+        # esenic iyos debugingistvis 
+        # print("Customer Emails:", customer_emails)  
+        # print("Contractor Emails:", contractor_emails)  
+        # print(f"Participants: {participants}")  
 
-            if self.question:
-                message += f'\nQuestion: {self.question}'
+        if participants:
+            subject = f'New Question Added in Project: {instance.name}'
+            message = f'A new question has been added to the project "{instance.name}".'
+            if instance.question:
+                message += f'\nQuestion: {instance.question}'
 
-            email = EmailMessage(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                participants,
-            )
+            email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, participants)
 
-            # tu file atvirtulia miabas 
-            if self.question_file:
-                email.attach_file(self.question_file.path)
+            if instance.question_file:
+                email.attach_file(instance.question_file.path)
+            email.send(fail_silently=False)
 
-            email.send()
-    # def __str__(self):
-    #     return self.name
+            # try:  # es mqondes debugingistvis
+            #     email.send(fail_silently=False)
+            # except Exception as e:
+            #     print(f"Email failed to send: {e}")
+
 
 class Task(models.Model):  # proeqtshi arsebuli konkretuli davaleba
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')

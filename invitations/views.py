@@ -121,7 +121,7 @@ def register_user(request):
         personal_space, created = PersonalSpace.objects.get_or_create(user=user)
 
         # mowvevis washla dadasturebis mere magram jobia jer ar wavshalo 
-        # invitation.delete()
+        invitation.delete()
 
         # authetifikacia
         refresh = RefreshToken.for_user(user)
