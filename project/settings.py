@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'invitations',
     'app',
+    'dashboard',
 ]
 
 MIDDLEWARE = [
