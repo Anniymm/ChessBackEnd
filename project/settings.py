@@ -46,8 +46,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+APPEND_SLASH = False
+
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173/",
+    "http://localhost:5173",
 ]
 
 CORS_ALLOW_METHODS = (
@@ -58,6 +60,7 @@ CORS_ALLOW_METHODS = (
     "POST",
     "PUT",
 )
+
 ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [

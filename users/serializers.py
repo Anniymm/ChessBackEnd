@@ -10,7 +10,7 @@ User = get_user_model()
 class PersonalSpaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonalSpace
-        fields = ['first_name', "last_name"] 
+        fields = ['first_name', "last_name", "profile_pic"] 
         read_only_fields = ['user'] # amas ro ver sheexos saertod, ro ar shecvalon 
 
 

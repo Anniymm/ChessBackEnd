@@ -74,3 +74,16 @@ class PersonalSpaceView(generics.RetrieveUpdateAPIView):
         user = self.request.user
         personal_space, created = PersonalSpace.objects.get_or_create(user=user)
         return personal_space
+    
+    def put(self, request, *args, **kwargs):
+        personal_space = self.get_object()
+        serializer = self.get_serializer(personal_space, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            print(f"Uploaded file: {serializer.validated_data.get('profile_pic')}")
+
+            return Response(serializer.data)  # Return updated data
+        print(serializer.errors)
+
+        return Response(serializer.errors, status=400)

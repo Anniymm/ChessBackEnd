@@ -28,7 +28,7 @@ def send_invitation(request):
         invitee_email=invitee_email, 
         token=token,
         first_name=first_name,
-        last_name=last_name
+        last_name=last_name,
     )
 
     # Email 
@@ -109,7 +109,7 @@ def register_user(request):
         'password': password,
         'confirm_password': confirm_password,
         'first_name': invitation.first_name,
-        'last_name': invitation.first_name,
+        'last_name': invitation.last_name,
         'username': email  # gmail rogorc username, amis shecvla shemidzlia rorame
     }
 
