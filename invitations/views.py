@@ -20,35 +20,38 @@ def send_invitation(request):
     invitee_email = request.data.get('invitee_email')
     first_name = request.data.get('first_name')
     last_name = request.data.get('last_name')
-    #  token
+    role = request.data.get('role')  # shearchios roli
+
+    if role not in ['customer', 'contractor']:
+        return Response({'error': 'Invalid role. Must be customer or contractor.'}, status=status.HTTP_400_BAD_REQUEST)
+
     token = default_token_generator.make_token(inviter)
 
     invitation = Invitation.objects.create(
-        inviter=inviter, 
-        invitee_email=invitee_email, 
+        inviter=inviter,
+        invitee_email=invitee_email,
         token=token,
         first_name=first_name,
         last_name=last_name,
+        role=role  
     )
 
-    # Email 
+    
     current_site = get_current_site(request)
     mail_subject = 'Invitation to join the project'
     message = (
-        f"{inviter.username} has invited you to join their personal space on {current_site.domain}.\n\n"
+        f"{inviter.username} has invited you to join their personal space as a {role} on {current_site.domain}.\n\n"
         f"Use this link to accept the invitation:\n"
         f"http://{current_site.domain}/invite/accept-invitation/?token={token}\n\n"
     )
 
-    # Email 
+    # Send email
     email = EmailMessage(
         mail_subject,
         message,
-        from_email=settings.EMAIL_HOST_USER,  
+        from_email=settings.EMAIL_HOST_USER,
         to=[invitee_email],
     )
-
-    # Send email
     email.send(fail_silently=False)
 
     return Response({'detail': 'Invitation sent successfully', 'token': token}, status=status.HTTP_200_OK)
@@ -57,21 +60,18 @@ def send_invitation(request):
 @api_view(['GET'])
 def accept_invitation(request):
     token = request.GET.get('token')
-    # email = request.GET.get('email')
 
-    if not token :
-        return Response({'error': 'Token and email are required'}, status=status.HTTP_400_BAD_REQUEST)
+    if not token:
+        return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
     try:
         invitation = Invitation.objects.get(token=token, accepted=False)
     except Invitation.DoesNotExist:
         return Response({'error': 'Invalid token or invitation already accepted'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # dadastureba
     invitation.accepted = True
-    #shevinaxot bazashi
-    invitation.save() 
+    invitation.save()
+    
     return Response({'detail': 'Invitation accepted successfully', 'token': token}, status=status.HTTP_200_OK)
-
 
 @api_view(['POST'])
 def register_user(request):
@@ -83,50 +83,46 @@ def register_user(request):
         return Response({'error': 'Email, password, and confirm password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        invitations = Invitation.objects.filter(invitee_email=email, accepted=True)
-
-        if invitations.exists():
-            invitation = invitations.latest('created_at')
-            inviter = invitation.inviter
-        else:
-            return Response({'error': 'No valid invitation found for this email'}, status=status.HTTP_400_BAD_REQUEST)
-
+        invitation = Invitation.objects.get(invitee_email=email, accepted=True)
     except Invitation.DoesNotExist:
         return Response({'error': 'No valid invitation found for this email'}, status=status.HTTP_400_BAD_REQUEST)
-    except Invitation.MultipleObjectsReturned:
-        return Response({'error': 'Multiple invitations found for this email'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # tu gmail ukve arsebobs
+    if password != confirm_password:
+        return Response({'error': 'Passwords do not match'}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         user = get_user_model().objects.get(email=email)
         return Response({'error': 'User with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
     except get_user_model().DoesNotExist:
         pass
 
-    # serializeristvis
+    # Create the user
     user_data = {
         'email': email,
         'password': password,
         'confirm_password': confirm_password,
         'first_name': invitation.first_name,
         'last_name': invitation.last_name,
-        'username': email  # gmail rogorc username, amis shecvla shemidzlia rorame
+        'username': email  
     }
-
+    
     serializer = UserSerializer(data=user_data)
     if serializer.is_valid():
         user = serializer.save()
 
-        # personal spacestvis
-        personal_space, created = PersonalSpace.objects.get_or_create(user=user)
+        #personal space sheqmna axali useristvis 
+        PersonalSpace.objects.get_or_create(user=user)
 
-        # mowvevis washla dadasturebis mere magram jobia jer ar wavshalo 
+        if invitation.role == 'customer':
+            pass
+        elif invitation.role == 'contractor':
+            pass
+
         invitation.delete()
 
-        # authetifikacia
         refresh = RefreshToken.for_user(user)
         token_data = {
-            'refresh': str(refresh), #stringi ar gamomrches 
+            'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
 

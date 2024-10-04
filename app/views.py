@@ -19,12 +19,12 @@ class ProjectView(viewsets.ModelViewSet):
             description=data['description'],
             start_date=data['start_date'],
             end_date=data['end_date'],
-            question=data.get('question'),
-            question_file=data.get('question_file'),
+            # question=data.get('question'),
+            # question_file=data.get('question_file'),
         )
 
-        project.customers.set(data.get('customers', []))
-        project.contractors.set(data.get('contractors', []))
+        # project.customers.set(data.get('customers', []))
+        # project.contractors.set(data.get('contractors', []))
         project.save()
         serializer = self.get_serializer(project)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
