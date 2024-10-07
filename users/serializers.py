@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from .models import PersonalSpace
 
 User = get_user_model()
-
+    
 class PersonalSpaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonalSpace

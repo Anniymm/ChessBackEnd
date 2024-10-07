@@ -15,10 +15,11 @@ class Project(models.Model):
     description = models.TextField()
     start_date = models.DateTimeField() # deadline
     end_date = models.DateTimeField() # deadline
-    # question = models.CharField(max_length=300, blank=True, null=True)
-    # question_file = models.FileField(upload_to='uploads/', blank=True, null=True)
     customers = models.ManyToManyField(User, related_name='customer_projects')
     contractors = models.ManyToManyField(User,related_name='contractor_projects')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_created')
+    # question = models.CharField(max_length=300, blank=True, null=True)
+    # question_file = models.FileField(upload_to='uploads/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -59,11 +60,11 @@ class Task(models.Model):  # proeqtshi arsebuli konkretuli davaleba
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
     name = models.CharField(max_length=200)
     description = models.TextField()
+    question = models.CharField(max_length=300, blank=True, null=True)  # Task-level question
+    question_file = models.FileField(upload_to='uploads/tasks/', blank=True, null=True)  # Task-level question file
     # start_date = models.DateTimeField()
     # end_date = models.DateTimeField()
     # status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('in_progress', 'In Progress'), ('completed', 'Completed'
-    question = models.CharField(max_length=300, blank=True, null=True)  # Task-level question
-    question_file = models.FileField(upload_to='uploads/tasks/', blank=True, null=True)  # Task-level question file
     # customers_task = models.ManyToManyField(User, related_name='customer_projects')
     # contractors_task = models.ManyToManyField(User,related_name='contractor_projects')
 

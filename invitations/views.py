@@ -119,7 +119,7 @@ def register_user(request):
             pass
 
         invitation.delete()
-
+# registraciis mere chveulebriv ubrundeba tokenebi da aqedanve shemidzlia daloginebulad chavtvalo, anu logika davwero ro rame
         refresh = RefreshToken.for_user(user)
         token_data = {
             'refresh': str(refresh),

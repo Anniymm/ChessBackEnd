@@ -1,11 +1,15 @@
 from rest_framework import serializers
 from .models import *
+from django.contrib.auth import get_user_model
+from users.serializers import UserSerializer  
+
+User = get_user_model()
 
 class ProjectSerializer(serializers.ModelSerializer):
+    created_by = UserSerializer(read_only=True)  
     class Meta:
         model = Project
-        fields = '__all__'
-    
+        fields = ['id', 'name', 'description', 'start_date', 'end_date', 'created_by']
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:

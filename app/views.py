@@ -19,6 +19,7 @@ class ProjectView(viewsets.ModelViewSet):
             description=data['description'],
             start_date=data['start_date'],
             end_date=data['end_date'],
+            created_by=request.user
             # question=data.get('question'),
             # question_file=data.get('question_file'),
         )
