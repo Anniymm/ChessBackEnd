@@ -7,6 +7,9 @@ router.register(r'project', ProjectView, basename='projects')
 router.register(r'tasks', TaskView, basename='tasks')
 router.register(r'taskStatus', TaskStatusView, basename='status')
 router.register(r'timer', TimerView, basename='timer')
+router.register(r'questions', QuestionView, basename='questions')
+
 urlpatterns = [
     path('', include(router.urls)),
+
 ]

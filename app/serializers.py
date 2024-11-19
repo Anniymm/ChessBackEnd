@@ -6,7 +6,7 @@ from users.serializers import UserSerializer
 User = get_user_model()
 
 class ProjectSerializer(serializers.ModelSerializer):
-    created_by = UserSerializer(read_only=True)  
+    created_by = UserSerializer(read_only=True)   # ase ajobebs clinetsidestvis 
     class Meta:
         model = Project
         fields = ['id', 'name', 'description', 'start_date', 'end_date', 'created_by']
@@ -14,7 +14,13 @@ class ProjectSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = ['id', 'project', 'name', 'description', 'created_by']  # Add other fields if necessary
+        read_only_fields = ['created_by']  # Prevent users from setting this directly
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['created_by'] = request.user  # Automatically set created_by to the logged-in user
+        return super().create(validated_data)
 
 class TaskStatusSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,7 +32,7 @@ class TimerSerializer(serializers.ModelSerializer):
         model = Timer
         fields = '__all__'
 
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = '__all__'
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = '__all__'

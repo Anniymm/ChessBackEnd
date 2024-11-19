@@ -18,77 +18,60 @@ class Project(models.Model):
     customers = models.ManyToManyField(User, related_name='customer_projects')
     contractors = models.ManyToManyField(User,related_name='contractor_projects')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_created')
-    # question = models.CharField(max_length=300, blank=True, null=True)
-    # question_file = models.FileField(upload_to='uploads/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
-# @receiver(post_save, sender=Project)
-# def send_project_question_email(sender, instance, **kwargs):
-#     is_new_question = instance.question or instance.question_file
-#     if is_new_question:
-#         # email adresebis aghdegena 
-#         customer_emails = list(instance.customers.values_list('email', flat=True))
-#         contractor_emails = list(instance.contractors.values_list('email', flat=True))
-
-#         participants = customer_emails + contractor_emails
-#         # esenic iyos debugingistvis 
-#         # print("Customer Emails:", customer_emails)  
-#         # print("Contractor Emails:", contractor_emails)  
-#         # print(f"Participants: {participants}")  
-
-#         if participants:
-#             subject = f'New Question Added in Project: {instance.name}'
-#             message = f'A new question has been added to the project "{instance.name}".'
-#             if instance.question:
-#                 message += f'\nQuestion: {instance.question}'
-
-#             email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, participants)
-
-#             if instance.question_file:
-#                 email.attach_file(instance.question_file.path)
-#             email.send(fail_silently=False)
-
-#             # try:  # es mqondes debugingistvis
-#             #     email.send(fail_silently=False)
-#             # except Exception as e:
-#             #     print(f"Email failed to send: {e}")
 
 
 class Task(models.Model):  # proeqtshi arsebuli konkretuli davaleba
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
     name = models.CharField(max_length=200)
     description = models.TextField()
-    question = models.CharField(max_length=300, blank=True, null=True)  # Task-level question
-    question_file = models.FileField(upload_to='uploads/tasks/', blank=True, null=True)  # Task-level question file
-    # start_date = models.DateTimeField()
-    # end_date = models.DateTimeField()
-    # status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('in_progress', 'In Progress'), ('completed', 'Completed'
-    # customers_task = models.ManyToManyField(User, related_name='customer_projects')
-    # contractors_task = models.ManyToManyField(User,related_name='contractor_projects')
-
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks_created')
 
     def __str__(self):
         return self.name
 
-@receiver(post_save, sender=Task)
-def send_task_question_email(sender, instance, **kwargs):
-    is_new_question = instance.question or instance.question_file
-    if is_new_question:
+
+class Question(models.Model):  # Independent question model
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='questions')
+    question_text = models.CharField(max_length=300, blank=True, null=True)
+    question_file = models.FileField(upload_to='uploads/questions/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Question for Task: {self.task.name}"
+
+@receiver(post_save, sender=Question)
+def send_question_email(sender, instance, **kwargs):
+    if instance.question_text or instance.question_file:
         project = instance.project
+        # timer ro gachedres aqaa eg logika
+        if hasattr(project, 'timer'):
+            timer = project.timer
+            now = timezone.now()
+            time_spent = now - timer.last_switched
+            
+            if timer.current_responsible in project.customers.all():
+                timer.customer_time += time_spent
+            elif timer.current_responsible in project.contractors.all():
+                timer.contractor_time += time_spent
+            
+            timer.last_switched = now
+            timer.save()
+
         customer_emails = list(project.customers.values_list('email', flat=True))
         contractor_emails = list(project.contractors.values_list('email', flat=True))
         participants = customer_emails + contractor_emails
 
         if participants:
-            subject = f'New Question Added in Task: {instance.name} (Project: {project.name})'
-            message = f'A new question has been added to the task "{instance.name}" in project "{project.name}".'
-            if instance.question:
-                message += f'\nQuestion: {instance.question}'
-            
-            email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, participants)
+            subject = f'New Question Added in Project: {project.name}'
+            message = f'A new question has been added to the project "{project.name}".'
+            if instance.question_text:
+                message += f'\nQuestion: {instance.question_text}'
 
+            email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, participants)
+            
             if instance.question_file:
                 email.attach_file(instance.question_file.path)
             email.send(fail_silently=False)
@@ -99,12 +82,28 @@ class TaskStatus(models.Model): #ra donezea davaleba
     status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('in_progress', 'In Progress'), ('completed', 'Completed')]) #aqedan shedzlebs archevas 
     responsible_person = models.ForeignKey(User, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)  # ra drosac davalebis statusi sheicvala
+# aqedean timestamp undaa amovigho rom davitvalo mere 
 
 class Timer(models.Model):
-    task = models.OneToOneField(Task, on_delete=models.CASCADE, related_name='timer')
+    project = models.OneToOneField(Project, on_delete=models.CASCADE, related_name='timer')
     customer_time = models.DurationField(default=0)
     contractor_time = models.DurationField(default=0)
     last_switched = models.DateTimeField(auto_now=True)
     current_responsible = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='current_timers')
 
-# kavshirebi invited peoplebtan !!!!
+    def switch_responsibility(self, new_responsible):
+        now = timezone.now()
+
+        time_spent = now - self.last_switched
+
+        if self.current_responsible in self.project.customers.all():
+            self.customer_time += time_spent
+        elif self.current_responsible in self.project.contractors.all():
+            self.contractor_time += time_spent
+
+        self.current_responsible = new_responsible
+        self.last_switched = now
+        self.save()
+
+    def __str__(self):
+        return f"Timer for Project: {self.project.name}"

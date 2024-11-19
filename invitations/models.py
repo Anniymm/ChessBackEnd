@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from app.models import Project
 ####mowvevaaaa
 class Invitation(models.Model):
     inviter = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -15,6 +15,6 @@ class Invitation(models.Model):
         ('contractor', 'Contractor'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, blank=True, null=True)
-
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="invitations")
     def __str__(self):
         return f"Invitation from {self.inviter.username} to {self.invitee_email}"

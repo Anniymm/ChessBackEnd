@@ -12,7 +12,7 @@ from .models import Invitation
 from django.conf import settings
 from users.serializers import UserSerializer
 from users.models import PersonalSpace
-
+from app.models import Project
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_invitation(request):
@@ -20,10 +20,17 @@ def send_invitation(request):
     invitee_email = request.data.get('invitee_email')
     first_name = request.data.get('first_name')
     last_name = request.data.get('last_name')
-    role = request.data.get('role')  # shearchios roli
+    role = request.data.get('role')  # Role can be 'customer' or 'contractor'
+    project_id = request.data.get('project_id')  # Get the project ID from the request
 
     if role not in ['customer', 'contractor']:
         return Response({'error': 'Invalid role. Must be customer or contractor.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Retrieve the project to ensure it exists
+    try:
+        project = Project.objects.get(id=project_id)
+    except Project.DoesNotExist:
+        return Response({'error': 'Project does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
     token = default_token_generator.make_token(inviter)
 
@@ -33,10 +40,10 @@ def send_invitation(request):
         token=token,
         first_name=first_name,
         last_name=last_name,
-        role=role  
+        role=role,
+        project=project  # Set the project field
     )
 
-    
     current_site = get_current_site(request)
     mail_subject = 'Invitation to join the project'
     message = (
@@ -56,13 +63,13 @@ def send_invitation(request):
 
     return Response({'detail': 'Invitation sent successfully', 'token': token}, status=status.HTTP_200_OK)
 
-
 @api_view(['GET'])
 def accept_invitation(request):
     token = request.GET.get('token')
 
     if not token:
         return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
     try:
         invitation = Invitation.objects.get(token=token, accepted=False)
     except Invitation.DoesNotExist:
@@ -70,8 +77,15 @@ def accept_invitation(request):
 
     invitation.accepted = True
     invitation.save()
-    
-    return Response({'detail': 'Invitation accepted successfully', 'token': token}, status=status.HTTP_200_OK)
+
+    user = request.user
+    if invitation.role == 'customer':
+        invitation.inviter.customer_projects.add(invitation.project)
+    elif invitation.role == 'contractor':
+        invitation.inviter.contractor_projects.add(invitation.project)
+
+    return Response({'detail': 'Invitation accepted successfully, project added to dashboard', 'token': token}, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def register_user(request):
