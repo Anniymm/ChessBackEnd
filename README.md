@@ -1,6 +1,9 @@
-# Project Management Web Application
 
+## ❗Branches
+Review the different branches for specific parts of the project. Once reviewed, merge requests can be created as needed.
+# Project Management Web Application
 A comprehensive web application designed for efficient project management, tailored to facilitate smooth collaboration between clients and contractors. The application uses a chess clock principle to track task progress timelines and identify the responsible party during specific periods.
+
 
 ## Key Features
 
